@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 RPG 게임</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: 2.5em;
+        }
+
+        canvas {
+            border: 3px solid #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background: #87CEEB;
+        }
+
+        .ui-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 15px;
+            color: white;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 상점 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .shop-items {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .item-info h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .item-info p {
+            margin: 2px 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .price {
+            color: #FFD700 !important;
+            font-weight: bold;
+        }
+
+        .shop-btn {
+            background: rgba(34, 139, 34, 0.8);
+            border: 2px solid rgba(34, 139, 34, 1);
+        }
+
+        .shop-btn:hover {
+            background: rgba(34, 139, 34, 1);
+        }
+
+        /* 포션 버튼 스타일 */
+        .potion-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            border: 2px solid #ff4500;
+            color: white;
+            font-weight: bold;
+        }
+
+        .potion-btn:hover {
+            background: linear-gradient(45deg, #ff5252, #ff8c00);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .potion-icon {
+            font-size: 1.2em;
+            animation: potionGlow 2s infinite alternate;
+        }
+
+        @keyframes potionGlow {
+            0% { text-shadow: 0 0 5px #ff6b6b; }
+            100% { text-shadow: 0 0 15px #ffa500, 0 0 20px #ff6b6b; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌟 귀여운 RPG 모험 🌟</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="ui-panel">
+            <div class="stats">
+                <div>❤️ HP: <span id="playerHP">100</span>/100</div>
+                <div>⚔️ 공격력: <span id="playerAttack">15</span></div>
+                <div>💰 골드: <span id="playerGold">0</span></div>
+                <div>⭐ 레벨: <span id="playerLevel">1</span></div>
+                <div>🧪 포션: <span id="playerPotions">3</span></div>
+            </div>
+            <div id="gameStatus">게임을 시작하세요!</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="startGame()">게임 시작</button>
+            <button class="btn" onclick="attack()">⚔️ 공격</button>
+            <button class="btn potion-btn" onclick="usePotion()">
+                <div class="potion-icon">🧪</div>
+                <span>포션 사용</span>
+            </button>
+            <button class="btn" onclick="openShop()">🏪 상점</button>
+            <button class="btn" onclick="resetGame()">🔄 다시 시작</button>
+        </div>
+
+        <div class="controls" style="margin-top: 10px;">
+            <p>🎮 조작법: WASD 또는 화살표 키로 이동 | F키 또는 좌클릭 공격 | E키 포션 사용</p>
+        </div>
+    </div>
+
+    <!-- 상점 모달 -->
+    <div id="shopModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeShop()">&times;</span>
+            <h2>🏪 상점</h2>
+            <div class="shop-items">
+                <div class="shop-item">
+                    <div class="item-info">
+                        <h3>🧪 힐링 포션</h3>
+                        <p>HP를 50 회복합니다</p>
+                        <p class="price">💰 가격: 30골드</p>
+                    </div>
+                    <button class="btn shop-btn" onclick="buyItem('healing_potion')">구매</button>
+                </div>
+                
+                <div class="shop-item">
+                    <div class="item-info">
+                        <h3>⚔️ 공격력 강화</h3>
+                        <p>영구적으로 공격력 +5 증가</p>
+                        <p class="price">💰 가격: 100골드</p>
+                    </div>
+                    <button class="btn shop-btn" onclick="buyItem('attack_upgrade')">구매</button>
+                </div>
+                
+                <div class="shop-item">
+                    <div class="item-info">
+                        <h3>❤️ 최대 HP 증가</h3>
+                        <p>영구적으로 최대 HP +25 증가</p>
+                        <p class="price">💰 가격: 80골드</p>
+                    </div>
+                    <button class="btn shop-btn" onclick="buyItem('hp_upgrade')">구매</button>
+                </div>
+                
+                <div class="shop-item">
+                    <div class="item-info">
+                        <h3>🏃 이동속도 증가</h3>
+                        <p>영구적으로 이동속도 +1 증가</p>
+                        <p class="price">💰 가격: 120골드</p>
+                    </div>
+                    <button class="btn shop-btn" onclick="buyItem('speed_upgrade')">구매</button>
+                </div>
+                
+                <div class="shop-item">
+                    <div class="item-info">
+                        <h3>💎 특별 포션</h3>
+                        <p>HP를 완전히 회복합니다</p>
+                        <p class="price">💰 가격: 50골드</p>
+                    </div>
+                    <button class="btn shop-btn" onclick="buyItem('super_potion')">구매</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+
